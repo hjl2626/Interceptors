@@ -2,6 +2,7 @@ package com.iot.flume;
 
 import org.apache.flume.Context;
 import org.apache.flume.Event;
+import org.apache.flume.conf.ConfigurationException;
 import org.apache.flume.interceptor.Interceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +82,7 @@ public class SimpleInterceptor implements Interceptor {
      */
     public static class Builder implements Interceptor.Builder {
 
-        private int partitionNum;
+        private Integer partitionNum;
 
         public Interceptor build() {
             return new SimpleInterceptor(partitionNum);
@@ -89,7 +90,10 @@ public class SimpleInterceptor implements Interceptor {
 
 
         public void configure(Context context) {
-            partitionNum = context.getInteger(Constants.PARTITIONNUM, 1);
+            partitionNum = context.getInteger(Constants.PARTITIONNUM);
+            if(null==partitionNum || partitionNum < 0){
+                throw new ConfigurationException("Invalid partitionNum");
+            }
         }
 
     }
