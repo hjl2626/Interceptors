@@ -1,4 +1,4 @@
-package com.iot.flume;
+package com.iot.flume.interceptor;
 
 import org.apache.flume.Context;
 import org.apache.flume.Event;
@@ -11,25 +11,20 @@ import java.util.List;
 import java.util.Map;
 
 
-
 /**
-
  * <code>
- *   agent.sources.r1.channels = c1<p>
- *   agent.sources.r1.type = SEQ<p>
- *   agent.sources.r1.interceptors = i1<p>
- *   agent.sources.r1.interceptors.i1.type = host<p>
- *   agent.sources.r1.interceptors.i1.preserveExisting = true<p>
- *   agent.sources.r1.interceptors.i1.useIP = false<p>
- *   agent.sources.r1.interceptors.i1.hostHeader = hostname<p>
+ * agent.sources.r1.channels = c1<p>
+ * agent.sources.r1.type = SEQ<p>
+ * agent.sources.r1.interceptors = i1<p>
+ * agent.sources.r1.interceptors.i1.type = SimpleInterceptor<p>
+ * agent.sources.r1.interceptors.i1.partitionNum = INTEGER<p>
  * </code>
- *
  */
 public class SimpleInterceptor implements Interceptor {
     private static final Logger logger = LoggerFactory
             .getLogger(SimpleInterceptor.class);
 
-    private static HashMap<String,Integer> index = new HashMap<String, Integer>();
+    private static HashMap<String, Integer> index = new HashMap<String, Integer>();
     private String partitionNum;
 
 
@@ -48,18 +43,18 @@ public class SimpleInterceptor implements Interceptor {
         Map<String, String> headers = event.getHeaders();
         Integer par;
         String key = headers.get("type");
-        if(partitionNum != null){
+        if (partitionNum != null) {
             int partitionNumInt = Integer.valueOf(partitionNum);
-            if(index.containsKey(key)){
-                if(index.get(key) >= partitionNumInt){
-                    index.put(key,0);
+            if (index.containsKey(key)) {
+                if (index.get(key) >= partitionNumInt) {
+                    index.put(key, 0);
                 }
                 par = index.get(key) % partitionNumInt;
-                index.put(key,par+1);
+                index.put(key, par + 1);
 
-            }else{
+            } else {
                 par = 0;
-                index.put(key,1);
+                index.put(key, 1);
             }
             headers.put("partition", par.toString());
         }
@@ -68,6 +63,7 @@ public class SimpleInterceptor implements Interceptor {
 
     /**
      * Delegates to {@link #intercept(Event)} in a loop.
+     *
      * @param events
      * @return
      */
@@ -98,7 +94,7 @@ public class SimpleInterceptor implements Interceptor {
         public Interceptor build() {
             logger.info(String.format(
                     "Creating SimpleInterceptor: partitionNum=%s",
-                   partitionNum));
+                    partitionNum));
             return new SimpleInterceptor(partitionNum);
         }
 
